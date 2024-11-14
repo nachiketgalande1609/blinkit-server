@@ -4,7 +4,6 @@ import { Counter } from "./counter.js";
 const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
-        required: true,
     },
     customer: {
         type: mongoose.Schema.Types.ObjectId,
@@ -14,26 +13,27 @@ const orderSchema = new mongoose.Schema({
     deliveryPartner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "DeliveryPartner",
-        required: true,
     },
     branch: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Branch",
         required: true,
     },
-    items: {
-        id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
-            required: true,
+    items: [
+        {
+            id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
+            },
+            item: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                required: true,
+            },
+            count: { type: Number, required: true },
         },
-        item: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
-            required: true,
-        },
-        count: { type: Number, required: true },
-    },
+    ],
     deliveryLocation: {
         latitude: { type: Number, required: true },
         longitude: { type: Number, required: true },
@@ -45,8 +45,8 @@ const orderSchema = new mongoose.Schema({
         address: { type: String },
     },
     deliveryPersonLocation: {
-        latitude: { type: Number, required: true },
-        longitude: { type: Number, required: true },
+        latitude: { type: Number },
+        longitude: { type: Number },
         address: { type: String },
     },
     status: {
@@ -60,11 +60,16 @@ const orderSchema = new mongoose.Schema({
 });
 
 async function getNextSequenceValue(sequenceName) {
-    const sequenceDocument = await Counter.findOneAndUpdate({ name: sequenceName }, { $inc: { sequence_value: 1 } }, { new: true, upserttrue });
+    console.log("Runing");
+    const sequenceDocument = await Counter.findOneAndUpdate({ name: sequenceName }, { $inc: { sequence_value: 1 } }, { new: true, upsert: true });
+    console.log("xxx", sequenceDocument);
+
     return sequenceDocument.sequence_value;
 }
 
 orderSchema.pre("save", async function (next) {
+    console.log("Running 1");
+
     if (this.isNew) {
         const sequenceValue = await getNextSequenceValue("orderId");
         this.orderId = `ORDR${sequenceValue.toString().padStart(5, "0")}`;
