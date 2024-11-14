@@ -73,6 +73,8 @@ export const confirmOrder = async (req, reply) => {
 
         await order.save();
 
+        req.server.io.to(orderId).emit("orderConfirmed", order);
+
         return reply.send(order);
     } catch (error) {
         return reply.status(500).send({ message: "Failed to confirm order", error });
@@ -111,6 +113,8 @@ export const updateOrderStatus = async (req, reply) => {
         order.deliveryPersonLocation = deliveryPersonLocation;
 
         await order.save();
+
+        req.server.io.to(orderId).emit("liveTrackingUpdates", order);
 
         return reply.send(order);
     } catch (error) {
