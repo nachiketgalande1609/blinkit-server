@@ -60,16 +60,11 @@ const orderSchema = new mongoose.Schema({
 });
 
 async function getNextSequenceValue(sequenceName) {
-    console.log("Runing");
     const sequenceDocument = await Counter.findOneAndUpdate({ name: sequenceName }, { $inc: { sequence_value: 1 } }, { new: true, upsert: true });
-    console.log("xxx", sequenceDocument);
-
     return sequenceDocument.sequence_value;
 }
 
 orderSchema.pre("save", async function (next) {
-    console.log("Running 1");
-
     if (this.isNew) {
         const sequenceValue = await getNextSequenceValue("orderId");
         this.orderId = `ORDR${sequenceValue.toString().padStart(5, "0")}`;
